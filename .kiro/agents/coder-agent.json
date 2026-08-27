@@ -35,7 +35,8 @@
     "file://.kiro/steering/frontend-02-requests-and-apis.md",
     "file://.kiro/steering/frontend-03-components-and-styling.md",
     "file://.kiro/steering/frontend-05-code-style-and-quality.md",
-    "file://.kiro/steering/frontend-global_forbidden_rules.md"
+    "file://.kiro/steering/frontend-global_forbidden_rules.md",
+    "file://.kiro/steering/ec-web-project-locator.md"
   ],
   "toolsSettings": {
     "execute_bash": {

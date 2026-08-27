@@ -17,7 +17,9 @@
     "execute_bash",
     "@google-workspace"
   ],
-  "resources": [],
+  "resources": [
+    "file://.kiro/steering/ec-web-project-locator.md"
+  ],
   "toolsSettings": {
     "execute_bash": {
       "allowedCommands": [
