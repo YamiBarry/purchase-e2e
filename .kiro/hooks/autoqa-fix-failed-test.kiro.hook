@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "修复失败的自动化测试用例",
+  "description": "手动触发后，根据测试报告链接分析失败用例原因，自动定位并修复自动化测试脚本代码。",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "请激活 autoqa-fix-failed-test skill（通过 discloseContext 工具，name 为 'autoqa-fix-failed-test'），然后严格按照该 skill 定义的流程执行。\n\n⚠️ 重要约束：禁止直接修改 case 脚本（test_*.py 和 parameters/*.json），它们是从平台导出的。如果参数有问题，必须追溯到 TestCasesManager 导出逻辑或数据库数据。只允许修改 action 代码。\n\n请先询问用户：请提供测试报告的 HTML 链接（通常为 https://cdn.yamibuy.tech/file/common/xxx.html 格式）。\n\n等待用户提供链接后，按照 skill 中定义的步骤依次执行：环境检查 → 解析报告 → 获取执行参数和脚本 → 失败原因分类 → 修复/验证/报告。"
+  }
+}

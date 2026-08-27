@@ -1,0 +1,24 @@
+{
+  "name": "doc-engineer-agent",
+  "description": "文档工程师，基于代码实现生成接口文档和测试发布文档",
+  "prompt": "file://doc-engineer-agent/prompt.md",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "execute_bash",
+    "@google-sheets",
+    "@google-workspace"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "@google-sheets",
+    "@google-workspace",
+    "execute_bash"
+  ],
+  "resources": []
+}

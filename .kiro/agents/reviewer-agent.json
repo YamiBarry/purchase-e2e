@@ -1,0 +1,38 @@
+{
+  "name": "reviewer-agent",
+  "description": "审查员，基于《重构》原则检查架构依从性、工具复用、代码质量",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "execute_bash",
+    "@google-workspace"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "execute_bash",
+    "@google-workspace"
+  ],
+  "resources": [
+    "skill://.kiro/skills/code-simplification/SKILL.md",
+    "skill://.kiro/skills/code-review-and-quality/SKILL.md",
+    "skill://.kiro/skills/security-and-hardening/SKILL.md",
+    "skill://.kiro/skills/performance-optimization/SKILL.md",
+    "skill://.kiro/skills/deprecation-and-migration/SKILL.md",
+    "file://.kiro/steering/architecture-tech-principles.md",
+    "file://.kiro/steering/architecture-business-principles.md"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "allowedCommands": [
+        ".*memory_cli\\.py.*",
+        ".*mysql.*-e.*"
+      ]
+    }
+  },
+  "prompt": "file://reviewer-agent/prompt.md"
+}

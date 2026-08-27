@@ -1,0 +1,38 @@
+{
+  "name": "architect-agent",
+  "description": "架构师，制定模块骨架和设计规范，优先复用现有公共工具",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "execute_bash",
+    "@google-workspace"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "execute_bash",
+    "@google-workspace"
+  ],
+  "resources": [
+    "skill://.kiro/skills/api-and-interface-design/SKILL.md",
+    "skill://.kiro/skills/planning-and-task-breakdown/SKILL.md",
+    "skill://.kiro/skills/spec-driven-development/SKILL.md",
+    "skill://.kiro/skills/context-engineering/SKILL.md",
+    "skill://.kiro/skills/documentation-and-adrs/SKILL.md",
+    "file://.kiro/steering/architecture-tech-principles.md",
+    "file://.kiro/steering/architecture-business-principles.md"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "allowedCommands": [
+        ".*memory_cli\\.py.*",
+        ".*mysql.*-e.*"
+      ]
+    }
+  },
+  "prompt": "file://architect-agent/prompt.md"
+}

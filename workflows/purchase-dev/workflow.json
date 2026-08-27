@@ -1,0 +1,272 @@
+{
+  "name": "purchase-dev",
+  "description": "Purchase 团队需求全流程：需求分析 → PRD 审计 → 设计稿 → 设计审查 → 接口契约 → 架构 → 架构审查 → 编码提交 → 单测 → 代码审查 → 集成测试 → 交付文档",
+  "version": "0.2.0",
+  "mode": "external",
+  "params": [
+    {
+      "name": "requirement",
+      "type": "string",
+      "description": "需求描述（业务方原话即可，PM Agent 会做结构化分析）",
+      "required": true
+    },
+    {
+      "name": "requester",
+      "type": "string",
+      "description": "需求方（姓名或企微 ID），用于交付物署名和确认对象",
+      "required": false,
+      "default": ""
+    },
+    {
+      "name": "op_number",
+      "type": "string",
+      "description": "OpenProject 工单号；填 none 由 PM Agent 自动创建",
+      "required": false,
+      "default": "none"
+    },
+    {
+      "name": "repos",
+      "type": "string",
+      "description": "预计涉及的仓库，逗号分隔；留空由架构阶段判定",
+      "required": false,
+      "default": ""
+    },
+    {
+      "name": "need_design",
+      "type": "select",
+      "description": "是否需要 HTML 设计稿：auto 由 PM 判断 / yes 强制走 / no 强制跳过",
+      "required": false,
+      "default": "auto"
+    },
+    {
+      "name": "test_env",
+      "type": "string",
+      "description": "集成测试环境：dev / gqc / uat",
+      "required": false,
+      "default": "gqc"
+    },
+    {
+      "name": "max_retry",
+      "type": "number",
+      "description": "同一审查节点最多打回次数；达到上限时审查节点调 complete-phase.py block 转人工",
+      "required": false,
+      "default": 2
+    }
+  ],
+  "phases": [
+    {
+      "id": "pm",
+      "name": "需求分析",
+      "description": "结构化分析需求，产出 PRD / UIH，判定需求类型与是否需要设计稿",
+      "ref": "phase-pm.md",
+      "nodeType": "agent_compute",
+      "agent": "purchase-pm-agent",
+      "requiredArtifacts": ["phase-pm.json", "phase-pm.md"],
+      "outputSchema": {
+        "requiredFields": ["task_type", "need_design", "need_code", "summary", "prd_path"],
+        "fieldTypes": {
+          "task_type": "string",
+          "need_design": "string",
+          "need_code": "string",
+          "summary": "string",
+          "prd_path": "string"
+        }
+      }
+    },
+    {
+      "id": "pm_review",
+      "name": "PRD 审计",
+      "description": "对照对话记录审查 PRD/UIH 完整性；打回超限时 block 转人工",
+      "ref": "phase-pm-review.md",
+      "nodeType": "agent_decision",
+      "agent": "purchase-pm-review-agent",
+      "dependsOn": ["pm"],
+      "requiredArtifacts": ["phase-pm_review.json", "phase-pm_review.md"],
+      "outputSchema": {
+        "requiredFields": ["conclusion", "loop_count", "issues"],
+        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+      }
+    },
+    {
+      "id": "design",
+      "name": "设计稿",
+      "description": "按 PRD + UIH 产出符合 YAMI Design System 的 HTML 静态稿并上传 Google Drive",
+      "ref": "phase-design.md",
+      "nodeType": "agent_output",
+      "agent": "purchase-design-agent",
+      "dependsOn": ["pm"],
+      "skipIf": "{{phase-pm.need_design}} == \"no\"",
+      "requiredArtifacts": ["phase-design.json", "phase-design.md"],
+      "outputSchema": {
+        "requiredFields": ["html_paths", "drive_url", "summary"],
+        "fieldTypes": { "html_paths": "array", "drive_url": "string", "summary": "string" }
+      }
+    },
+    {
+      "id": "design_review",
+      "name": "设计审查",
+      "description": "审查 HTML 是否符合设计系统与 PRD，产出设计师评审包；打回超限时 block 转人工",
+      "ref": "phase-design-review.md",
+      "nodeType": "agent_decision",
+      "agent": "purchase-design-review-agent",
+      "dependsOn": ["pm", "design"],
+      "skipIf": "{{phase-pm.need_design}} == \"no\"",
+      "requiredArtifacts": ["phase-design_review.json", "phase-design_review.md"],
+      "outputSchema": {
+        "requiredFields": ["conclusion", "loop_count", "issues"],
+        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+      }
+    },
+    {
+      "id": "api",
+      "name": "接口契约",
+      "description": "基于 PRD 与现有代码设计 API 契约，复用既有实体与响应结构",
+      "ref": "phase-api.md",
+      "nodeType": "agent_compute",
+      "agent": "api-designer-agent",
+      "dependsOn": ["pm"],
+      "skipIf": "{{phase-pm.need_code}} == \"no\"",
+      "requiredArtifacts": ["phase-api.json", "phase-api.md"],
+      "outputSchema": {
+        "requiredFields": ["contract_path", "endpoints", "services"],
+        "fieldTypes": { "contract_path": "string", "endpoints": "array", "services": "array" }
+      }
+    },
+    {
+      "id": "arch",
+      "name": "架构规范",
+      "description": "制定模块骨架、复用的公共工具、数据库与配置变更",
+      "ref": "phase-arch.md",
+      "nodeType": "agent_compute",
+      "agent": "architect-agent",
+      "dependsOn": ["pm", "api"],
+      "skipIf": "{{phase-pm.need_code}} == \"no\"",
+      "requiredArtifacts": ["phase-arch.json", "phase-arch.md"],
+      "outputSchema": {
+        "requiredFields": ["arch_path", "services", "db_changes", "config_changes"],
+        "fieldTypes": { "arch_path": "string", "services": "array", "db_changes": "array", "config_changes": "array" }
+      }
+    },
+    {
+      "id": "arch_review",
+      "name": "架构审查",
+      "description": "审查架构对需求的覆盖度与技术合理性；打回超限时 block 转人工",
+      "ref": "phase-arch-review.md",
+      "nodeType": "agent_decision",
+      "agent": "reviewer-agent",
+      "dependsOn": ["pm", "api", "arch"],
+      "skipIf": "{{phase-pm.need_code}} == \"no\"",
+      "requiredArtifacts": ["phase-arch_review.json", "phase-arch_review.md"],
+      "outputSchema": {
+        "requiredFields": ["conclusion", "loop_count", "issues"],
+        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+      }
+    },
+    {
+      "id": "code",
+      "name": "编码与提交",
+      "description": "按架构规范与契约实现业务代码，复用公共工具库；完成后 commit、推分支、建 PR",
+      "ref": "phase-code.md",
+      "nodeType": "agent_compute",
+      "agent": "coder-agent",
+      "dependsOn": ["api", "arch"],
+      "skipIf": "{{phase-pm.need_code}} == \"no\"",
+      "requiredArtifacts": ["phase-code.json", "phase-code.md"],
+      "outputSchema": {
+        "requiredFields": ["branches", "changed_files", "build_status", "pushed", "pr_urls"],
+        "fieldTypes": {
+          "branches": "array",
+          "changed_files": "array",
+          "build_status": "string",
+          "pushed": "string",
+          "pr_urls": "array"
+        }
+      }
+    },
+    {
+      "id": "ut",
+      "name": "单元测试",
+      "description": "基于实现代码补 Spock / Vitest 单测并跑通，提交到同一分支",
+      "ref": "phase-ut.md",
+      "nodeType": "agent_compute",
+      "agent": "ut-generator",
+      "dependsOn": ["arch", "code"],
+      "skipIf": "{{phase-pm.need_code}} == \"no\"",
+      "requiredArtifacts": ["phase-ut.json", "phase-ut.md"],
+      "outputSchema": {
+        "requiredFields": ["test_files", "test_status", "case_count", "coverage_note"],
+        "fieldTypes": { "test_files": "array", "test_status": "string", "case_count": "number", "coverage_note": "string" }
+      }
+    },
+    {
+      "id": "code_review",
+      "name": "代码审查",
+      "description": "审查架构依从性、工具复用、代码坏味道、分支隔离；打回超限时 block 转人工",
+      "ref": "phase-code-review.md",
+      "nodeType": "agent_decision",
+      "agent": "reviewer-agent",
+      "dependsOn": ["arch", "code", "ut"],
+      "skipIf": "{{phase-pm.need_code}} == \"no\"",
+      "requiredArtifacts": ["phase-code_review.json", "phase-code_review.md"],
+      "outputSchema": {
+        "requiredFields": ["conclusion", "loop_count", "issues"],
+        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+      }
+    },
+    {
+      "id": "qa",
+      "name": "集成测试",
+      "description": "部署测试环境并执行接口/场景测试；失败回 code 修复，超限时 block 转人工",
+      "ref": "phase-qa.md",
+      "nodeType": "agent_decision",
+      "agent": "purchase-qa-agent",
+      "dependsOn": ["pm", "api", "code"],
+      "skipIf": "{{phase-pm.need_code}} == \"no\"",
+      "requiredArtifacts": ["phase-qa.json", "phase-qa.md"],
+      "outputSchema": {
+        "requiredFields": ["conclusion", "loop_count", "env", "cases", "failures"],
+        "fieldTypes": { "conclusion": "string", "loop_count": "number", "env": "string", "cases": "array", "failures": "array" }
+      }
+    },
+    {
+      "id": "doc",
+      "name": "交付文档",
+      "description": "生成前端接口文档与测试发布文档，汇总交付清单（含分支、PR、DB/配置变更）",
+      "ref": "phase-doc.md",
+      "nodeType": "agent_output",
+      "agent": "doc-engineer-agent",
+      "dependsOn": ["pm", "api", "arch", "code"],
+      "requiredArtifacts": ["phase-doc.json", "phase-doc.md"],
+      "outputSchema": {
+        "requiredFields": ["api_doc_path", "test_doc_path", "deliverables"],
+        "fieldTypes": { "api_doc_path": "string", "test_doc_path": "string", "deliverables": "array" }
+      }
+    }
+  ],
+  "flow": {
+    "entry": "pm",
+    "edges": [
+      { "source": "pm", "target": "pm_review", "label": "送审" },
+      { "source": "pm_review", "target": "pm", "label": "打回补充", "condition": { "field": "conclusion", "equals": "fail" } },
+      { "source": "pm_review", "target": "design", "label": "通过" },
+
+      { "source": "design", "target": "design_review", "label": "送审" },
+      { "source": "design_review", "target": "design", "label": "打回重做", "condition": { "field": "conclusion", "equals": "fail" } },
+      { "source": "design_review", "target": "api", "label": "通过" },
+
+      { "source": "api", "target": "arch", "label": "契约就绪" },
+
+      { "source": "arch", "target": "arch_review", "label": "送审" },
+      { "source": "arch_review", "target": "arch", "label": "打回重做", "condition": { "field": "conclusion", "equals": "fail" } },
+      { "source": "arch_review", "target": "code", "label": "通过" },
+
+      { "source": "code", "target": "ut", "label": "补测试" },
+      { "source": "ut", "target": "code_review", "label": "送审" },
+      { "source": "code_review", "target": "code", "label": "打回修复", "condition": { "field": "conclusion", "equals": "fail" } },
+      { "source": "code_review", "target": "qa", "label": "通过" },
+
+      { "source": "qa", "target": "code", "label": "测试失败回修", "condition": { "field": "conclusion", "equals": "fail" } },
+      { "source": "qa", "target": "doc", "label": "通过" }
+    ]
+  }
+}

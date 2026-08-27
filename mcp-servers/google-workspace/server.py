@@ -1,0 +1,553 @@
+import json
+import os
+from pathlib import Path
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from mcp.server.fastmcp import FastMCP
+
+SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/presentations",
+    "https://www.googleapis.com/auth/spreadsheets",
+]
+
+mcp = FastMCP("google-workspace")
+
+
+def get_credentials():
+    """Load credentials. Supports service account (preferred) or OAuth."""
+    service_account_path = os.environ.get("SERVICE_ACCOUNT_PATH", "service_account.json")
+
+    # 优先使用 Service Account
+    if Path(service_account_path).exists():
+        from google.oauth2 import service_account
+        creds = service_account.Credentials.from_service_account_file(
+            service_account_path, scopes=SCOPES
+        )
+        return creds
+
+    # Fallback: OAuth
+    credentials_path = os.environ.get("CREDENTIALS_PATH", "credentials.json")
+    token_path = os.environ.get("TOKEN_PATH", "token.json")
+
+    creds = None
+    if Path(token_path).exists():
+        with open(token_path) as f:
+            creds = Credentials.from_authorized_user_info(json.load(f))
+
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open(token_path, "w") as f:
+            f.write(creds.to_json())
+
+    return creds
+
+
+def get_docs_service():
+    return build("docs", "v1", credentials=get_credentials())
+
+
+def get_drive_service():
+    return build("drive", "v3", credentials=get_credentials())
+
+
+def get_slides_service():
+    return build("slides", "v1", credentials=get_credentials())
+
+
+# ─── Google Docs Tools ───────────────────────────────────────────────────────
+
+
+@mcp.tool()
+def create_doc(title: str, content: str = "", folder_id: str | None = None) -> dict:
+    """Create a Google Doc.
+
+    Args:
+        title: Document title
+        content: Initial text content
+        folder_id: Optional Drive folder ID to place the doc in
+    """
+    docs = get_docs_service()
+    doc = docs.documents().create(body={"title": title}).execute()
+    doc_id = doc["documentId"]
+
+    if folder_id:
+        drive = get_drive_service()
+        file = drive.files().get(fileId=doc_id, fields="parents").execute()
+        drive.files().update(
+            fileId=doc_id,
+            addParents=folder_id,
+            removeParents=",".join(file.get("parents", [])),
+            fields="id,parents",
+        ).execute()
+
+    if content:
+        docs.documents().batchUpdate(
+            documentId=doc_id,
+            body={"requests": [{"insertText": {"location": {"index": 1}, "text": content}}]},
+        ).execute()
+
+    # 自动共享给 yamibuy.com 域所有人（读权限）
+    drive = get_drive_service()
+    try:
+        drive.permissions().create(
+            fileId=doc_id,
+            body={"type": "domain", "role": "reader", "domain": "yamibuy.com"},
+            fields="id",
+        ).execute()
+    except Exception:
+        pass  # 共享失败不阻塞
+
+    return {"id": doc_id, "url": f"https://docs.google.com/document/d/{doc_id}/edit"}
+
+
+@mcp.tool()
+def read_doc(document_id: str) -> str:
+    """Read a Google Doc's plain text content.
+
+    Args:
+        document_id: The document ID
+    """
+    docs = get_docs_service()
+    doc = docs.documents().get(documentId=document_id).execute()
+
+    text = ""
+    for element in doc.get("body", {}).get("content", []):
+        if "paragraph" in element:
+            for run in element["paragraph"].get("elements", []):
+                if "textRun" in run:
+                    text += run["textRun"]["content"]
+    return text
+
+
+@mcp.tool()
+def update_doc(document_id: str, content: str) -> str:
+    """Replace all content in a Google Doc.
+
+    Args:
+        document_id: The document ID
+        content: New text content to replace everything
+    """
+    docs = get_docs_service()
+    doc = docs.documents().get(documentId=document_id).execute()
+
+    end_index = doc["body"]["content"][-1]["endIndex"] - 1
+    requests = []
+    if end_index > 1:
+        requests.append({"deleteContentRange": {"range": {"startIndex": 1, "endIndex": end_index}}})
+    requests.append({"insertText": {"location": {"index": 1}, "text": content}})
+
+    docs.documents().batchUpdate(documentId=document_id, body={"requests": requests}).execute()
+    return "Document updated successfully."
+
+
+@mcp.tool()
+def append_to_doc(document_id: str, content: str) -> str:
+    """Append text to the end of a Google Doc.
+
+    Args:
+        document_id: The document ID
+        content: Text to append
+    """
+    docs = get_docs_service()
+    doc = docs.documents().get(documentId=document_id).execute()
+    end_index = doc["body"]["content"][-1]["endIndex"] - 1
+
+    docs.documents().batchUpdate(
+        documentId=document_id,
+        body={"requests": [{"insertText": {"location": {"index": end_index}, "text": content}}]},
+    ).execute()
+    return "Content appended successfully."
+
+
+# ─── Google Drive Tools ──────────────────────────────────────────────────────
+
+
+@mcp.tool()
+def list_files(folder_id: str | None = None, query: str | None = None) -> list[dict]:
+    """List files in Google Drive.
+
+    Args:
+        folder_id: Optional folder ID to list files from
+        query: Optional Drive query string (e.g. "name contains 'report'")
+    """
+    drive = get_drive_service()
+    q_parts = []
+    if folder_id:
+        q_parts.append(f"'{folder_id}' in parents")
+    if query:
+        q_parts.append(query)
+    q_parts.append("trashed = false")
+
+    results = drive.files().list(
+        q=" and ".join(q_parts),
+        pageSize=100,
+        fields="files(id, name, mimeType, modifiedTime, size)",
+    ).execute()
+    return results.get("files", [])
+
+
+@mcp.tool()
+def create_folder(name: str, parent_id: str | None = None) -> dict:
+    """Create a folder in Google Drive.
+
+    Args:
+        name: Folder name
+        parent_id: Optional parent folder ID
+    """
+    drive = get_drive_service()
+    metadata: dict = {"name": name, "mimeType": "application/vnd.google-apps.folder"}
+    if parent_id:
+        metadata["parents"] = [parent_id]
+
+    folder = drive.files().create(body=metadata, fields="id, name").execute()
+
+    # 自动共享给 yamibuy.com 域所有人（读权限）
+    try:
+        drive.permissions().create(
+            fileId=folder["id"],
+            body={"type": "domain", "role": "reader", "domain": "yamibuy.com"},
+            fields="id",
+        ).execute()
+    except Exception:
+        pass
+
+    return {"id": folder["id"], "name": folder["name"]}
+
+
+@mcp.tool()
+def move_file(file_id: str, folder_id: str) -> str:
+    """Move a file to a different folder.
+
+    Args:
+        file_id: The file ID to move
+        folder_id: Destination folder ID
+    """
+    drive = get_drive_service()
+    file = drive.files().get(fileId=file_id, fields="parents").execute()
+    previous_parents = ",".join(file.get("parents", []))
+
+    drive.files().update(
+        fileId=file_id,
+        addParents=folder_id,
+        removeParents=previous_parents,
+        fields="id, parents",
+    ).execute()
+    return "File moved successfully."
+
+
+@mcp.tool()
+def share_file(file_id: str, email: str, role: str = "reader") -> str:
+    """Share a file with a user.
+
+    Args:
+        file_id: The file ID to share
+        email: Email address to share with
+        role: Permission role - 'reader', 'writer', or 'commenter'
+    """
+    drive = get_drive_service()
+    drive.permissions().create(
+        fileId=file_id,
+        body={"type": "user", "role": role, "emailAddress": email},
+        sendNotificationEmail=True,
+    ).execute()
+    return f"File shared with {email} as {role}."
+
+
+@mcp.tool()
+def get_file_info(file_id: str) -> dict:
+    """Get file metadata from Google Drive.
+
+    Args:
+        file_id: The file ID
+    """
+    drive = get_drive_service()
+    return drive.files().get(
+        fileId=file_id,
+        fields="id, name, mimeType, size, modifiedTime, createdTime, owners, parents, webViewLink",
+    ).execute()
+
+
+@mcp.tool()
+def delete_file(file_id: str) -> str:
+    """Delete a file from Google Drive (moves to trash).
+
+    Args:
+        file_id: The file ID to delete
+    """
+    drive = get_drive_service()
+    drive.files().update(fileId=file_id, body={"trashed": True}).execute()
+    return "File moved to trash."
+
+
+@mcp.tool()
+def upload_file(name: str, content: str, mime_type: str = "text/plain", folder_id: str | None = None) -> dict:
+    """Upload a file to Google Drive.
+
+    Args:
+        name: File name (e.g. "report.html", "data.csv")
+        content: File content as text
+        mime_type: MIME type (default: text/plain). Common types: text/html, text/csv, application/json, image/png
+        folder_id: Optional folder ID to upload into
+    """
+    from googleapiclient.http import MediaInMemoryUpload
+
+    drive = get_drive_service()
+    metadata: dict = {"name": name}
+    if folder_id:
+        metadata["parents"] = [folder_id]
+
+    media = MediaInMemoryUpload(content.encode("utf-8"), mimetype=mime_type)
+    file = drive.files().create(body=metadata, media_body=media, fields="id,webViewLink").execute()
+
+    # 自动共享给 yamibuy.com 域
+    try:
+        drive.permissions().create(
+            fileId=file["id"],
+            body={"type": "domain", "role": "reader", "domain": "yamibuy.com"},
+            fields="id",
+        ).execute()
+    except Exception:
+        pass
+
+    return {"id": file["id"], "url": file.get("webViewLink", f"https://drive.google.com/file/d/{file['id']}/view")}
+
+
+@mcp.tool()
+def download_file(file_id: str) -> str:
+    """Download a file's content from Google Drive as text.
+
+    Args:
+        file_id: The file ID to download
+
+    Returns:
+        File content as text. For Google Docs/Sheets/Slides, exports as plain text.
+    """
+    drive = get_drive_service()
+    # 获取文件元信息
+    file_meta = drive.files().get(fileId=file_id, fields="mimeType,name").execute()
+    mime = file_meta.get("mimeType", "")
+
+    # Google Workspace 文件需要 export
+    if "google-apps.document" in mime:
+        content = drive.files().export(fileId=file_id, mimeType="text/plain").execute()
+        return content.decode("utf-8") if isinstance(content, bytes) else content
+    elif "google-apps.spreadsheet" in mime:
+        content = drive.files().export(fileId=file_id, mimeType="text/csv").execute()
+        return content.decode("utf-8") if isinstance(content, bytes) else content
+    elif "google-apps.presentation" in mime:
+        content = drive.files().export(fileId=file_id, mimeType="text/plain").execute()
+        return content.decode("utf-8") if isinstance(content, bytes) else content
+    else:
+        # 普通文件直接下载
+        content = drive.files().get_media(fileId=file_id).execute()
+        return content.decode("utf-8") if isinstance(content, bytes) else str(content)
+
+
+# ─── Google Slides Tools ─────────────────────────────────────────────────────
+
+
+@mcp.tool()
+def create_presentation(title: str) -> dict:
+    """Create a blank Google Slides presentation.
+
+    Args:
+        title: Presentation title
+    """
+    slides = get_slides_service()
+    presentation = slides.presentations().create(body={"title": title}).execute()
+    pres_id = presentation["presentationId"]
+
+    # 自动共享给 yamibuy.com 域所有人（读权限）
+    drive = get_drive_service()
+    try:
+        drive.permissions().create(
+            fileId=pres_id,
+            body={"type": "domain", "role": "reader", "domain": "yamibuy.com"},
+            fields="id",
+        ).execute()
+    except Exception:
+        pass
+
+    return {"id": pres_id, "url": f"https://docs.google.com/presentation/d/{pres_id}/edit"}
+
+
+@mcp.tool()
+def read_presentation(presentation_id: str) -> list[dict]:
+    """Read text content from all slides in a presentation.
+
+    Args:
+        presentation_id: The presentation ID
+    """
+    slides = get_slides_service()
+    presentation = slides.presentations().get(presentationId=presentation_id).execute()
+
+    result = []
+    for i, slide in enumerate(presentation.get("slides", []), 1):
+        texts = []
+        for element in slide.get("pageElements", []):
+            shape = element.get("shape", {})
+            text_elements = shape.get("text", {}).get("textElements", [])
+            for te in text_elements:
+                if "textRun" in te:
+                    texts.append(te["textRun"]["content"])
+        result.append({"slide": i, "text": "".join(texts)})
+    return result
+
+
+# ─── Google Sheets Tools ─────────────────────────────────────────────────────
+
+
+def get_sheets_service():
+    return build("sheets", "v4", credentials=get_credentials())
+
+
+@mcp.tool()
+def create_spreadsheet(title: str) -> dict:
+    """Create a new Google Spreadsheet.
+
+    Args:
+        title: Spreadsheet title
+    """
+    sheets = get_sheets_service()
+    spreadsheet = sheets.spreadsheets().create(body={"properties": {"title": title}}).execute()
+    ss_id = spreadsheet["spreadsheetId"]
+
+    drive = get_drive_service()
+    try:
+        drive.permissions().create(
+            fileId=ss_id,
+            body={"type": "domain", "role": "reader", "domain": "yamibuy.com"},
+            fields="id",
+        ).execute()
+    except Exception:
+        pass
+
+    return {"id": ss_id, "url": f"https://docs.google.com/spreadsheets/d/{ss_id}/edit"}
+
+
+@mcp.tool()
+def read_sheet(spreadsheet_id: str, range: str = "Sheet1") -> list[list[str]]:
+    """Read data from a Google Spreadsheet.
+
+    Args:
+        spreadsheet_id: The spreadsheet ID
+        range: Cell range in A1 notation (e.g. "Sheet1!A1:D10", "Sheet1", "A1:C5")
+
+    Returns:
+        2D list of cell values
+    """
+    sheets = get_sheets_service()
+    result = sheets.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id, range=range
+    ).execute()
+    return result.get("values", [])
+
+
+@mcp.tool()
+def write_sheet(spreadsheet_id: str, range: str, values: list[list[str]]) -> str:
+    """Write data to a Google Spreadsheet.
+
+    Args:
+        spreadsheet_id: The spreadsheet ID
+        range: Cell range in A1 notation (e.g. "Sheet1!A1", "A1:D10")
+        values: 2D list of values to write (rows × columns)
+    """
+    sheets = get_sheets_service()
+    sheets.spreadsheets().values().update(
+        spreadsheetId=spreadsheet_id,
+        range=range,
+        valueInputOption="USER_ENTERED",
+        body={"values": values},
+    ).execute()
+    return f"Written {len(values)} rows to {range}."
+
+
+@mcp.tool()
+def append_sheet(spreadsheet_id: str, range: str, values: list[list[str]]) -> str:
+    """Append rows to a Google Spreadsheet.
+
+    Args:
+        spreadsheet_id: The spreadsheet ID
+        range: Target range (e.g. "Sheet1!A:G", "Sheet1")
+        values: 2D list of rows to append
+    """
+    sheets = get_sheets_service()
+    sheets.spreadsheets().values().append(
+        spreadsheetId=spreadsheet_id,
+        range=range,
+        valueInputOption="USER_ENTERED",
+        insertDataOption="INSERT_ROWS",
+        body={"values": values},
+    ).execute()
+    return f"Appended {len(values)} rows."
+
+
+@mcp.tool()
+def clear_sheet(spreadsheet_id: str, range: str) -> str:
+    """Clear cells in a Google Spreadsheet.
+
+    Args:
+        spreadsheet_id: The spreadsheet ID
+        range: Cell range to clear (e.g. "Sheet1!A1:D10")
+    """
+    sheets = get_sheets_service()
+    sheets.spreadsheets().values().clear(
+        spreadsheetId=spreadsheet_id, range=range, body={}
+    ).execute()
+    return f"Cleared {range}."
+
+
+@mcp.tool()
+def get_sheet_info(spreadsheet_id: str) -> dict:
+    """Get spreadsheet metadata (title, sheets/tabs info).
+
+    Args:
+        spreadsheet_id: The spreadsheet ID
+    """
+    sheets = get_sheets_service()
+    ss = sheets.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    return {
+        "title": ss["properties"]["title"],
+        "sheets": [
+            {"title": s["properties"]["title"], "sheetId": s["properties"]["sheetId"],
+             "rowCount": s["properties"]["gridProperties"]["rowCount"],
+             "columnCount": s["properties"]["gridProperties"]["columnCount"]}
+            for s in ss.get("sheets", [])
+        ],
+    }
+
+
+@mcp.tool()
+def add_sheet_tab(spreadsheet_id: str, title: str) -> str:
+    """Add a new tab/sheet to a spreadsheet.
+
+    Args:
+        spreadsheet_id: The spreadsheet ID
+        title: New tab name
+    """
+    sheets = get_sheets_service()
+    sheets.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body={"requests": [{"addSheet": {"properties": {"title": title}}}]},
+    ).execute()
+    return f"Added tab '{title}'."
+
+
+# ─── Entry Point ─────────────────────────────────────────────────────────────
+
+
+def main():
+    mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()

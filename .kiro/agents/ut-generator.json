@@ -1,0 +1,29 @@
+{
+  "name": "ut-generator",
+  "description": "单元测试生成 agent，基于 Spock + Groovy 规范",
+  "tools": [
+    "@builtin",
+    "knowledge",
+    "@google-workspace"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "glob",
+    "grep",
+    "knowledge",
+    "@google-workspace"
+  ],
+  "resources": [
+    "skill://.kiro/skills/write-java-unit-test/SKILL.md"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "echo '## UT 生成 Agent 已启动\n\n请提供需要生成测试的 Java 文件路径，我会：\n1. 分析源代码结构和依赖\n2. 参考知识库中的 Spock 测试规范\n3. 生成符合规范的单元测试\n\n### 测试规范要点\n- 使用 Spock + Groovy\n- 静态方法 Mock 使用 StaticMockHelper\n- 被 Mock 字段不能是 private\n- 测试必须真正调用被测方法'"
+      }
+    ]
+  },
+  "prompt": "file://ut-generator/prompt.md"
+}

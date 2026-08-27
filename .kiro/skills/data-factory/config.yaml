@@ -1,0 +1,100 @@
+# Data Factory 配置文件
+# 支持 UAT / GQC / DEV 三套环境
+#
+# ⚠️ 安全提示：敏感信息必须通过环境变量配置，本文件仅包含占位符
+#
+# 必需的环境变量：
+#   - DATA_FACTORY_DB_PASSWORD: 数据库密码（必需）
+#   - DATA_FACTORY_MKT_SECRET: MKT Internal Secret（必需）
+#   - DATA_FACTORY_STRIPE_KEY: Stripe Publishable Key（必需）
+#   - DATA_FACTORY_HUB_PASSWORD: Hub Admin 密码（必需）
+#
+# 可选的环境变量：
+#   - DATA_FACTORY_DB_USER: 数据库用户名（默认 yami）
+#   - DATA_FACTORY_TEST_EMAIL: 默认测试邮箱
+#   - DATA_FACTORY_TEST_PASSWORD: 默认测试密码
+
+# ==================== API 地址 ====================
+environments:
+  UAT:
+    ec_base: "https://uat-ecapi.yamibuy.tech"
+    central_base: "https://uat-centralapi.yamibuy.tech"
+  GQC:
+    ec_base: "http://gqc-ecapi.yamibuy.tech"
+    central_base: "https://gqc-centralapi.yamibuy.tech"
+  DEV:
+    ec_base: "https://dev-ecapi.yamibuy.tech"
+    central_base: "https://dev-centralapi.yamibuy.tech"
+
+# ==================== 数据库配置（只读，用于验证数据） ====================
+# ⚠️ 密码必须通过环境变量 DATA_FACTORY_DB_PASSWORD 配置
+databases:
+  UAT:
+    host: "eks-uat-8-cluster.cluster-c5ywutgewymm.us-west-2.rds.amazonaws.com"
+    port: 3306
+    user: "${DATA_FACTORY_DB_USER:-yami}"
+    password: "${DATA_FACTORY_DB_PASSWORD}"
+    database: "yamibuy_master"
+    connect_timeout: 10
+  GQC:
+    host: "eks-gqc-8-cluster.cluster-c5ywutgewymm.us-west-2.rds.amazonaws.com"
+    port: 3306
+    user: "${DATA_FACTORY_DB_USER:-yami}"
+    password: "${DATA_FACTORY_DB_PASSWORD}"
+    database: "yamibuy_master"
+    connect_timeout: 10
+  DEV:
+    host: "eks-dev-8-cluster.cluster-c5ywutgewymm.us-west-2.rds.amazonaws.com"
+    port: 3306
+    user: "${DATA_FACTORY_DB_USER:-yami}"
+    password: "${DATA_FACTORY_DB_PASSWORD}"
+    database: "yamibuy_master"
+    connect_timeout: 10
+
+# ==================== 默认测试账号 ====================
+default_accounts:
+  UAT:
+    email: "${DATA_FACTORY_TEST_EMAIL:-renee01@yamibuy.com}"
+    password: "${DATA_FACTORY_TEST_PASSWORD:-111111}"
+  GQC:
+    email: "${DATA_FACTORY_TEST_EMAIL:-renee01@yamibuy.com}"
+    password: "${DATA_FACTORY_TEST_PASSWORD:-111111}"
+  DEV:
+    email: "${DATA_FACTORY_TEST_EMAIL:-renee01@yamibuy.com}"
+    password: "${DATA_FACTORY_TEST_PASSWORD:-111111}"
+
+# ==================== Hub Admin 账号（后台操作用） ====================
+# ⚠️ 密码必须通过环境变量 DATA_FACTORY_HUB_PASSWORD 配置
+hub_admin:
+  UAT:
+    email: "admin.fp"
+    password: "${DATA_FACTORY_HUB_PASSWORD}"
+  GQC:
+    email: "admin.fp"
+    password: "${DATA_FACTORY_HUB_PASSWORD}"
+  DEV:
+    email: "admin.fp"
+    password: "${DATA_FACTORY_HUB_PASSWORD}"
+
+# ==================== MKT Internal Secret ====================
+# ⚠️ 必须通过环境变量 DATA_FACTORY_MKT_SECRET 配置
+mkt_internal_secret:
+  UAT: "${DATA_FACTORY_MKT_SECRET}"
+  GQC: "${DATA_FACTORY_MKT_SECRET}"
+  DEV: "${DATA_FACTORY_MKT_SECRET}"
+
+# ==================== 支付配置 ====================
+# ⚠️ Stripe key 必须通过环境变量 DATA_FACTORY_STRIPE_KEY 配置
+payment:
+  stripe_publishable_key: "${DATA_FACTORY_STRIPE_KEY}"
+  default_zip: "91789"
+
+# ==================== 超时配置 ====================
+timeouts:
+  request: 30        # HTTP 请求超时（秒）
+  validation_wait: 2 # 验证等待时间（秒）
+
+# ==================== 日志配置 ====================
+logging:
+  level: "INFO"      # DEBUG / INFO / WARN / ERROR / SILENT
+  to_file: true      # 是否写入日志文件

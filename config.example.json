@@ -1,0 +1,36 @@
+{
+  "bot_id": "aibHnN5tRxUjMKkPiR9BbZ-kMKLVBy9EUml",
+  "secret": "your_bot_secret_here",
+  "welcome_msg": "👋 你好！我是 AgentFlow 助手。",
+  "agent": {
+    "command": "kiro-cli",
+    "args": [
+      "acp",
+      "--agent",
+      "purchase-pm-agent",
+      "--trust-all-tools"
+    ]
+  },
+  "chats": {
+    "default": {
+      "mode": "full"
+    }
+  },
+  "permissions": {
+    "mode": "trust-all",
+    "deny": [],
+    "denyCommands": [],
+    "denyKinds": []
+  },
+  "memory": {
+    "layers": [
+      {
+        "type": "conversation",
+        "enabled": true
+      }
+    ],
+    "injectionMaxChars": 2000
+  },
+  "bot_name": "purchase-agent",
+  "bot_profile_url": "https://cdn.yamibuy.net/favicon.ico"
+}

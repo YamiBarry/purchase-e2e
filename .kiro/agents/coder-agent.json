@@ -1,0 +1,52 @@
+{
+  "name": "coder-agent",
+  "description": "程序员，严格按契约和架构规范编写业务代码，复用公共工具",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "code",
+    "grep",
+    "@google-workspace",
+    "@openproject"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "code",
+    "grep",
+    "@google-workspace",
+    "@openproject"
+  ],
+  "resources": [
+    "skill://.kiro/skills/source-driven-development/SKILL.md",
+    "skill://.kiro/skills/incremental-implementation/SKILL.md",
+    "skill://.kiro/skills/frontend-ui-engineering/SKILL.md",
+    "skill://.kiro/skills/debugging-and-error-recovery/SKILL.md",
+    "skill://.kiro/skills/code-simplification/SKILL.md",
+    "skill://.kiro/skills/git-workflow-and-versioning/SKILL.md",
+    "skill://.kiro/skills/test-driven-development/SKILL.md",
+    "skill://.kiro/skills/performance-optimization/SKILL.md",
+    "skill://.kiro/skills/security-and-hardening/SKILL.md",
+    "skill://.kiro/skills/cms-config/SKILL.md",
+    "file://.kiro/steering/architecture-tech-principles.md",
+    "file://.kiro/steering/frontend-00-project-overview.md",
+    "file://.kiro/steering/frontend-02-requests-and-apis.md",
+    "file://.kiro/steering/frontend-03-components-and-styling.md",
+    "file://.kiro/steering/frontend-05-code-style-and-quality.md",
+    "file://.kiro/steering/frontend-global_forbidden_rules.md"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "allowedCommands": [
+        ".*mvn.*compile.*",
+        ".*mvn.*test.*",
+        ".*mvn.*install.*",
+        ".*memory_cli\\.py.*",
+        ".*mysql.*-e.*"
+      ]
+    }
+  },
+  "prompt": "file://coder-agent/prompt.md"
+}

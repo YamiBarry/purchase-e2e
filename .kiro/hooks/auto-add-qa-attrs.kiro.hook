@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "自动补全 QA 属性",
+  "description": "git commit 后自动检查前端文件，调用对应 skill 为缺少 data-qa / autoQaId 属性的元素补全测试属性",
+  "version": "1",
+  "when": {
+    "type": "postToolUse",
+    "toolTypes": ["shell"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "判断刚才执行的 shell 命令是否是 git commit（包含 'git commit' 关键字）。如果不是，直接结束，不做任何事。\n\n如果是 git commit，执行以下步骤：\n\n1. 运行 `git diff HEAD~1 --name-only` 获取最近一次提交涉及的文件列表\n2. 从文件列表中筛选前端文件（扩展名为 .jsx、.tsx、.vue、.php、.html、.blade.php、.dart 的文件）\n3. 如果没有前端文件，直接结束，不做任何事\n4. 如果有 .jsx、.tsx、.vue、.php、.html、.blade.php 文件：\n   - 激活 `react-qa-attributes-tagger` skill（通过 discloseContext）\n   - 按照 skill 中的规则，读取这些文件，为缺少 data-qa-* 属性的可交互元素补全属性\n5. 如果有 .dart 文件：\n   - 激活 `flutter-qa-attributes-tagger` skill（通过 discloseContext）\n   - 按照 skill 中的规则，读取这些文件，为缺少 autoQaId 的可交互元素补全属性\n6. 如果有文件被修改，执行 `git add -A` 然后 `git commit --amend --no-edit` 将修改追加到刚才的提交中\n7. 简要告知用户补全了哪些文件的哪些元素"
+  }
+}

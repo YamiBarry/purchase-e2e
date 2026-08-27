@@ -1,0 +1,51 @@
+{
+  "description": "UAT customer 站页面登录 + 导航方式",
+  "login": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "导航到首页",
+        "code": "await page.goto('{base_url}/zh')\nawait page.wait_for_load_state('domcontentloaded')"
+      },
+      {
+        "step": 2,
+        "action": "点击登录按钮",
+        "code": "await page.click('[data-qa-header-login-btn]')\nawait page.wait_for_selector('[data-qa-header-login-email-input]')"
+      },
+      {
+        "step": 3,
+        "action": "输入邮箱并继续",
+        "code": "await page.fill('[data-qa-header-login-email-input]', '{email}')\nawait page.click('[data-qa-loginpopup-next-btn]')\nawait page.wait_for_selector('[data-qa-header-login-pwd-input]')"
+      },
+      {
+        "step": 4,
+        "action": "输入密码并登录",
+        "code": "await page.fill('[data-qa-header-login-pwd-input]', '{password}')\nawait page.click('[data-qa-loginpopup-login-btn]')\nawait page.wait_for_timeout(3000)"
+      },
+      {
+        "step": 5,
+        "action": "验证登录成功",
+        "code": "logged_in = await page.locator('[data-qa-header-login-btn]').inner_text()\nassert '登录' not in logged_in and 'Sign in' not in logged_in, '登录失败'"
+      }
+    ],
+    "notes": [
+      "登录弹窗通过 header 的 data-qa-header-login-btn 触发",
+      "如果遇到 Account Migration 弹窗，等待其自动关闭后继续",
+      "如果遇到邮箱验证码弹窗，说明账号有问题，标记为 blocked"
+    ]
+  },
+  "navigation": {
+    "description": "通过页面菜单导航到目标页面，不要硬编码 URL 路径",
+    "rules": [
+      "禁止直接 page.goto(目标路径)，必须通过点击页面上的链接/菜单导航",
+      "导航到地址管理页：点击左侧菜单 [data-qa-menu-nav] 中的'地址管理'链接",
+      "导航到订单页：点击左侧菜单 [data-qa-menu-nav] 中的'订单'链接",
+      "导航到账户信息页：点击左侧菜单 [data-qa-menu-nav] 中的'账户信息'链接",
+      "导航后等待页面加载完成：await page.wait_for_load_state('domcontentloaded')"
+    ],
+    "examples": {
+      "address_list": "await page.click('[data-qa-menu-nav] >> text=地址管理')\nawait page.wait_for_load_state('domcontentloaded')",
+      "orders": "await page.click('[data-qa-menu-nav] >> text=订单')\nawait page.wait_for_load_state('domcontentloaded')"
+    }
+  }
+}

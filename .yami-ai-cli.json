@@ -1,0 +1,324 @@
+{
+  "tools": [
+    "kiro-cli"
+  ],
+  "preset": "autoqa",
+  "mode": "reference",
+  "resources": [
+    {
+      "name": "api-test",
+      "type": "skills"
+    },
+    {
+      "name": "athena-tracking-query",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-build-feature-knowledge",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-code-helper",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-fix-failed-test",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-flutter-qa-attributes-tagger",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-generate-appium-scripts",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-generate-playwright-scripts",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-generate-testcase-doc",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-pipeline",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-react-qa-attributes-tagger",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-verify-and-record-testcase",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-verify-and-record-testcase-mob",
+      "type": "skills"
+    },
+    {
+      "name": "cdn-upload",
+      "type": "skills"
+    },
+    {
+      "name": "code-branch-diff",
+      "type": "skills"
+    },
+    {
+      "name": "code-module-analyzer",
+      "type": "skills"
+    },
+    {
+      "name": "code-simplifier",
+      "type": "skills"
+    },
+    {
+      "name": "control-browser",
+      "type": "skills"
+    },
+    {
+      "name": "deep-research-agent",
+      "type": "skills"
+    },
+    {
+      "name": "deploy-idp-service",
+      "type": "skills"
+    },
+    {
+      "name": "figma-plugin-architect",
+      "type": "skills"
+    },
+    {
+      "name": "find-skills",
+      "type": "skills"
+    },
+    {
+      "name": "sql-query",
+      "type": "skills"
+    },
+    {
+      "name": "zentao-bug-reporter",
+      "type": "skills"
+    },
+    {
+      "name": "apollo_config_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "appium_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "athena_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "autoqa_case_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "figma",
+      "type": "mcp"
+    },
+    {
+      "name": "google-docs",
+      "type": "mcp"
+    },
+    {
+      "name": "google-sheets",
+      "type": "mcp"
+    },
+    {
+      "name": "openproject_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "outline_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "playwright_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "sql_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "test_report_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "autoqa-fix-failed-test.kiro.hook",
+      "type": "hooks"
+    },
+    {
+      "name": "code-commit.kiro.hook",
+      "type": "hooks"
+    },
+    {
+      "name": "autoqa-memory-protocol.md",
+      "type": "steering"
+    },
+    {
+      "name": "global_forbidden_rules.md",
+      "type": "steering"
+    },
+    {
+      "name": "global_guide.md",
+      "type": "steering"
+    },
+    {
+      "name": "skills-path-find-guide.md",
+      "type": "steering"
+    },
+    {
+      "name": "sub-agent-guide.md",
+      "type": "steering"
+    }
+  ],
+  "presetResources": [
+    {
+      "name": "athena-tracking-query",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-build-feature-knowledge",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-code-helper",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-fix-failed-test",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-flutter-qa-attributes-tagger",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-generate-appium-scripts",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-generate-playwright-scripts",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-generate-testcase-doc",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-pipeline",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-react-qa-attributes-tagger",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-verify-and-record-testcase",
+      "type": "skills"
+    },
+    {
+      "name": "autoqa-verify-and-record-testcase-mob",
+      "type": "skills"
+    },
+    {
+      "name": "control-browser",
+      "type": "skills"
+    },
+    {
+      "name": "find-skills",
+      "type": "skills"
+    },
+    {
+      "name": "sql-query",
+      "type": "skills"
+    },
+    {
+      "name": "zentao-bug-reporter",
+      "type": "skills"
+    },
+    {
+      "name": "apollo_config_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "appium_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "athena_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "autoqa_case_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "figma",
+      "type": "mcp"
+    },
+    {
+      "name": "google-docs",
+      "type": "mcp"
+    },
+    {
+      "name": "google-sheets",
+      "type": "mcp"
+    },
+    {
+      "name": "openproject_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "outline_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "playwright_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "sql_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "test_report_mcp",
+      "type": "mcp"
+    },
+    {
+      "name": "autoqa-fix-failed-test.kiro.hook",
+      "type": "hooks"
+    },
+    {
+      "name": "code-commit.kiro.hook",
+      "type": "hooks"
+    },
+    {
+      "name": "autoqa-memory-protocol.md",
+      "type": "steering"
+    },
+    {
+      "name": "global_forbidden_rules.md",
+      "type": "steering"
+    },
+    {
+      "name": "global_guide.md",
+      "type": "steering"
+    },
+    {
+      "name": "skills-path-find-guide.md",
+      "type": "steering"
+    },
+    {
+      "name": "sub-agent-guide.md",
+      "type": "steering"
+    }
+  ],
+  "importedAt": "2026-05-25T13:03:13.646Z"
+}

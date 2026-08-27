@@ -1,0 +1,40 @@
+{
+  "description": "UAT trade 站 checkout 页面登录 + 导航方式",
+  "login": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "导航到 trade 站首页",
+        "code": "await page.goto('{base_url}')\nawait page.wait_for_load_state('domcontentloaded')"
+      },
+      {
+        "step": 2,
+        "action": "点击登录按钮",
+        "code": "login_btn = page.locator('[data-qa-header-login-btn], .login-btn, a:has-text(\"Sign in\"), a:has-text(\"登录\")')\nawait login_btn.first.click()\nawait page.wait_for_timeout(2000)"
+      },
+      {
+        "step": 3,
+        "action": "输入邮箱并继续",
+        "code": "email_input = page.locator('[data-qa-header-login-email-input], input[type=\"email\"], input[name=\"email\"]')\nawait email_input.first.fill('{email}')\nnext_btn = page.locator('[data-qa-loginpopup-next-btn], button:has-text(\"Next\"), button:has-text(\"Continue\")')\nawait next_btn.first.click()\nawait page.wait_for_timeout(2000)"
+      },
+      {
+        "step": 4,
+        "action": "输入密码并登录",
+        "code": "pwd_input = page.locator('[data-qa-header-login-pwd-input], input[type=\"password\"]')\nawait pwd_input.first.fill('{password}')\nlogin_btn = page.locator('[data-qa-loginpopup-login-btn], button:has-text(\"Log in\"), button:has-text(\"Sign in\")')\nawait login_btn.first.click()\nawait page.wait_for_timeout(3000)"
+      }
+    ],
+    "notes": [
+      "trade 站可能与 customer 站共享登录态",
+      "如果已登录则跳过登录步骤",
+      "checkout 页面需要先加购商品才能访问"
+    ]
+  },
+  "navigation": {
+    "description": "checkout 页面需要先加购商品",
+    "rules": [
+      "先通过 API 或页面操作加购商品",
+      "然后导航到 /checkout 页面",
+      "确保购物车有商品才能进入 checkout"
+    ]
+  }
+}

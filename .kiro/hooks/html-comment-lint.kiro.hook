@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "HTML Comment Nesting Check",
+  "description": "检测 output/ 目录下新建或编辑的 HTML 文件是否存在注释嵌套问题（注释内部包含 &lt;!-- 或 --&gt;），如果发现则提醒修复。",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "output/**/*.html"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "检查刚创建的 HTML 文件是否存在「注释嵌套」问题：在 HTML 注释块 <!-- ... --> 内部是否包含了 <!-- 或 -->。如果发现，立即修复：将注释内部的 <!-- 和 --> 去掉，只保留纯文字描述。这是因为浏览器遇到注释内部的 --> 会认为注释提前结束，导致后续文字被渲染为可见内容。"
+  }
+}

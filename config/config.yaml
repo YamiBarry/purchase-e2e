@@ -1,0 +1,102 @@
+# E2E Test Agent 配置文件
+
+# 调度中心配置
+scheduler:
+  # 回调 URL（调度中心接口）
+  callback_url: "http://scheduler.yamibuy.com/api/callback"
+  # 超时时间（秒）
+  timeout: 300
+  # 重试次数
+  retry: 3
+
+# CDN 配置
+cdn:
+  # 上传接口
+  upload_url: "http://cdn.yamibuy.com/upload"
+  # 报告基础 URL
+  base_url: "http://cdn.yamibuy.com/reports"
+  # 上传超时（秒）
+  timeout: 60
+
+# 并发配置
+concurrency:
+  # 接口测试并发数
+  api_test: 5
+  # 浏览器测试并发数
+  browser_test: 3
+  # 最大工作进程数
+  max_workers: 8
+
+# 限制配置
+limits:
+  # Bug 修复最大轮次
+  bug_fix_rounds: 5
+  # 第二轮测试最大轮次
+  second_test_rounds: 3
+  # 自动化代码修复最大轮次
+  automation_fix_rounds: 3
+
+# Skills 配置
+skills:
+  # Skills 基础路径
+  base_path: ".kiro/skills"
+  # 使用的 Skills
+  enabled:
+    - autoqa-build-feature-knowledge
+    - autoqa-generate-testcase-doc
+    - autoqa-verify-and-record-testcase
+    - autoqa-generate-playwright-scripts
+    - autoqa-fix-failed-test
+    - code-module-analyzer
+    - data-factory
+
+# 测试环境配置
+test_env:
+  # 默认环境
+  default: "UAT"
+  # 可用环境
+  available:
+    - UAT
+    - GQC
+    - DEV
+
+# 报告配置
+report:
+  # 报告模板路径
+  template_path: ".kiro/skills/e2e-test-agent/assets/templates"
+  # 报告格式
+  format: "html"
+  # 是否包含截图
+  include_screenshots: true
+
+# 日志配置
+logging:
+  # 日志级别
+  level: "INFO"
+  # 日志目录
+  dir: "logs"
+  # 日志保留天数
+  retention_days: 30
+  # 是否输出到控制台
+  console: true
+
+# Git 配置
+git:
+  # 自动化代码仓库
+  automation_repo: "git@github.com:yamibuy/automation-tests.git"
+  # 基础分支
+  base_branch: "master"
+  # 提交者信息
+  author:
+    name: "E2E Test Agent"
+    email: "agent@yamibuy.com"
+
+# 通知配置
+notification:
+  # 是否启用通知
+  enabled: true
+  # 通知方式
+  channels:
+    - scheduler  # 调度中心
+    # - email    # 邮件（可选）
+    # - wecom    # 企业微信（可选）

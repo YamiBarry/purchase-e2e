@@ -1,0 +1,39 @@
+{
+  "name": "qa-agent",
+  "description": "测试开发，后置补测试 + 集成测试 + Web UI 测试",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "code",
+    "grep",
+    "@google-workspace"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "code",
+    "grep",
+    "@google-workspace"
+  ],
+  "resources": [
+    "skill://.kiro/skills/idp-deploy/SKILL.md",
+    "skill://.kiro/skills/browser-testing-with-devtools/SKILL.md",
+    "skill://.kiro/skills/test-driven-development/SKILL.md",
+    "skill://.kiro/skills/debugging-and-error-recovery/SKILL.md",
+    "skill://.kiro/skills/shipping-and-launch/SKILL.md"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "allowedCommands": [
+        ".*mvn.*test.*",
+        ".*mvn.*compile.*",
+        ".*memory_cli\\.py.*",
+        ".*mysql.*-e.*",
+        ".*opencli yamibuy-idp.*"
+      ]
+    }
+  },
+  "prompt": "file://qa-agent/prompt.md"
+}
