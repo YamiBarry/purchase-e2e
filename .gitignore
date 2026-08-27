@@ -41,3 +41,4 @@ logs/
 
 # 其他
 .DS_Store
+config.json
