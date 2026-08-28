@@ -85,3 +85,20 @@ done
 - 每次命令执行约 8-10 秒（需要通过浏览器获取认证 token）
 - Token 依赖 Windows Chrome 的 Google 登录状态，如果 Chrome 未登录 IDP 会失败
 - prd 环境部署前必须经过用户确认，Agent 不得自动部署到生产
+
+## 前端项目部署
+
+**前端 ec-website-* 和 ec-mobilesite-* 项目同样走 IDP 部署**，不存在例外。
+
+| 服务名（IDP） | 对应仓库 |
+|-------------|---------|
+| `ec-website-next` | ec-website-next |
+| `ec-website-nb` | ec-website-nb |
+| `ec-website-trade-nb` | ec-website-trade-nb |
+| `ec-website-customer-next` | ec-website-customer-next |
+| `ec-website-customer-nb` | ec-website-customer-nb |
+| `ec-mobilesite-next` | ec-mobilesite-next |
+| `ec-mobilesite-nb` | ec-mobilesite-nb |
+| `ec-mobilesite-ssr` | ec-mobilesite-ssr |
+
+⚠️ **严禁出现「前端不走 IDP 需人工部署」的判断**，这是错误的。

@@ -44,3 +44,6 @@ inclusion: always
 25. **禁止提交包含冲突标记的文件** — `<<<<<<<`、`=======`、`>>>>>>>` 必须解决后再提交
 26. **禁止将 node_modules/dist/build/.env 等产物提交到仓库** — 必须在 .gitignore 中排除
 27. **禁止单次 commit 包含不相关的多个变更** — 一个 commit 只做一件事
+
+## 部署规则
+18. **禁止判断「前端项目不走 IDP」** — ec-website-* 和 ec-mobilesite-* 前端项目同样通过 IDP 部署，不存在例外，遇到前端变更必须通过 IDP 部署到测试环境。
