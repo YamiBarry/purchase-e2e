@@ -12,7 +12,7 @@
 |---|---|---|
 | `branches` | array | 每项含 `repo` `branch` `worktree` |
 | `changed_files` | array | 变更文件路径 |
-| `build_status` | string | `pass` / `fail`；`fail` 不允许推进 |
+| `build_status` | string | `pass` / `skip`；worktree 无 node_modules 时用 `skip` + build_note 说明，不允许因此 block |
 | `pushed` | string | `yes` / `no`；`no` 时必须在 `build_note` 说明原因 |
 | `pr_urls` | array | PR 链接；为空时必须在 `build_note` 说明原因 |
 
@@ -32,6 +32,18 @@ git diff --name-only origin/master HEAD    # 与 master 的文件差异
 不要用不带 range 的 `git log` 判断 —— 它会列出已合并到 master 的祖先 commit，会误判分支不干净。
 
 **PR** — body 末尾必须有 `ai_coverage=X.X`。不要 push 到 master，不要 force push。
+
+## 编译验证降级规则（worktree 环境）
+
+**worktree 新建后无 node_modules 是已知限制，不允许因此 block。** 按以下顺序降级：
+
+1. **有 node_modules** → 跑完整构建（`pnpm build` / `npx mix`），`build_status=pass`
+2. **无 node_modules，Next.js** → 跑 `npx tsc --noEmit`（只需 TypeScript 编译器，无需全部依赖），或 `node --check` 语法验证，`build_status=skip`，build_note 说明
+3. **无 node_modules，Laravel/JS** → 跑 `node --check` 对关键 JS 文件做语法验证，`build_status=skip`，build_note 说明
+4. **任何情况下都不允许因「无法编译」而 block** — 代码写完就 commit + push，`build_status=skip` 推进，QA 阶段部署时会做真实构建验证
+
+**block 的正确场景**：代码逻辑错误、语法错误（node --check 报错）、架构偏差。
+**不能 block 的场景**：缺少 node_modules、缺少环境变量、网络问题。
 
 ## 路由
 
