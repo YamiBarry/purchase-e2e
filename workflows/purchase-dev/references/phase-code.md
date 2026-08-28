@@ -45,6 +45,21 @@ git diff --name-only origin/master HEAD    # 与 master 的文件差异
 **block 的正确场景**：代码逻辑错误、语法错误（node --check 报错）、架构偏差。
 **不能 block 的场景**：缺少 node_modules、缺少环境变量、网络问题。
 
+## 需要人工裁定时用 pause，不用 block
+
+遇到需要人工决策的情况（如：仓库实际状态与预期不符、分支策略需确认、工作量超出单次 phase 范围），**必须用 pause 而不是 block**：
+
+```bash
+python3 complete-phase.py "<instance-dir>" pause "需人工裁定：[具体问题描述和需要确认的选项]"
+```
+
+- `pause` = 等待人工 resume，**不触发重试机制**
+- `block` = 系统认为遇到了无法自动恢复的错误，**会触发最多3次重试后放弃**
+
+判断原则：
+- 代码/逻辑问题 → `block`（可能下次重试能解决）
+- 需要人工决策 → `pause`（重试没有意义，等人回答）
+
 ## 路由
 
 产出合法后完成本阶段 → `ut`。
