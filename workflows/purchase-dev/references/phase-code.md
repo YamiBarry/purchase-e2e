@@ -36,3 +36,15 @@ git diff --name-only origin/master HEAD    # 与 master 的文件差异
 ## 路由
 
 产出合法后完成本阶段 → `ut`。
+
+## 埋点规范（强制）
+
+**涉及埋点的需求，代码实现前必须：**
+
+1. 查阅埋点定义 Sheet：`https://docs.google.com/spreadsheets/d/1R8tlpst84cTV7d327ogg7Hib3lNobfGYzv0pedKZkGE/`
+2. 在 Sheet 里新增对应的 sheet 页（格式参考其他 sheet）
+3. 代码里使用项目统一埋点方式（`analytics.track()` + `AnalyticsEventNameMap`），不自造格式
+
+**严禁**：
+- ❌ 绕过 `AnalyticsEventNameMap` 直接用字符串事件名
+- ❌ 不查 Sheet 就自定义事件名格式
