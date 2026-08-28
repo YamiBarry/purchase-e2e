@@ -36,7 +36,8 @@
     "file://.kiro/steering/frontend-03-components-and-styling.md",
     "file://.kiro/steering/frontend-05-code-style-and-quality.md",
     "file://.kiro/steering/frontend-global_forbidden_rules.md",
-    "file://.kiro/steering/ec-web-project-locator.md"
+    "file://.kiro/steering/ec-web-project-locator.md",
+    "skill://.kiro/skills/tracking-spec/SKILL.md"
   ],
   "toolsSettings": {
     "execute_bash": {

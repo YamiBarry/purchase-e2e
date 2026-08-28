@@ -25,7 +25,8 @@
     "skill://.kiro/skills/documentation-and-adrs/SKILL.md",
     "file://.kiro/steering/architecture-tech-principles.md",
     "file://.kiro/steering/architecture-business-principles.md",
-    "file://.kiro/steering/ec-web-project-locator.md"
+    "file://.kiro/steering/ec-web-project-locator.md",
+    "skill://.kiro/skills/tracking-spec/SKILL.md"
   ],
   "toolsSettings": {
     "execute_bash": {
