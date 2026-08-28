@@ -1,6 +1,6 @@
 # IDP Deploy
 
-通过 IDP（Internal Developer Platform）部署微服务到各环境。当需要部署服务、查看部署状态、查看部署历史时使用。
+通过 IDP（Internal Developer Platform）部署服务到各环境。当需要部署服务、查看部署状态、查看部署历史时使用。
 
 触发词：部署, deploy, 发布, 上线, 部署环境, dev环境, qc环境, 测试环境, 部署状态
 
@@ -9,96 +9,91 @@
 | 环境 | 说明 |
 |------|------|
 | dev | 开发环境 |
-| qc | 测试环境 |
 | gqc | 全局测试环境 |
 | uat | 预发布环境 |
 | prd | 生产环境（⚠️ 需确认） |
 
-## 命令
+## 部署方式：使用 @bot MCP 工具
 
-### 1. 部署服务
+⚠️ **禁止使用 `opencli` 命令**，此命令不存在。必须通过 `@bot` MCP 工具调用 IDP。
 
-```bash
-opencli yamibuy-idp deploy --env <环境> --service <服务名> [--branch <分支>]
+### 1. 部署服务（run_build）
+
+调用 `@bot` MCP 的 `run_build` 工具：
+
+```json
+{
+  "environment": "gqc",
+  "services": [
+    {
+      "service_name": "ec-website-next",
+      "branch_or_tag": "OP-38663",
+      "order": 1
+    }
+  ]
+}
 ```
 
-- `service` 支持逗号分隔同时部署多个服务
-- `branch` 默认 `master`
-- 返回 `related_id` 用于查询状态
-- 部署通常需要 5-8 分钟
+多个服务同时部署（order 相同表示并行）：
 
-示例：
-```bash
-# 部署单个服务 master 到 dev
-opencli yamibuy-idp deploy --env dev --service ec-so-service
-
-# 部署 feature 分支到 qc
-opencli yamibuy-idp deploy --env qc --service ec-so-service --branch feature/OP-34000
-
-# 同时部署多个服务到同一环境
-opencli yamibuy-idp deploy --env qc --service ec-so-service,ec-so-job --branch feature/OP-34000
+```json
+{
+  "environment": "gqc",
+  "services": [
+    { "service_name": "ec-website-next", "branch_or_tag": "OP-38663", "order": 1 },
+    { "service_name": "ec-website-customer-next", "branch_or_tag": "OP-38663", "order": 1 },
+    { "service_name": "ec-website-nb", "branch_or_tag": "OP-38663", "order": 1 },
+    { "service_name": "ec-website-customer-nb", "branch_or_tag": "OP-38663", "order": 1 },
+    { "service_name": "ec-website-trade-nb", "branch_or_tag": "OP-38663", "order": 1 }
+  ]
+}
 ```
 
-### 2. 查询部署状态
+返回 `related_id`，用于后续查询状态。
 
-```bash
-opencli yamibuy-idp status --related_id <id>
+### 2. 查询部署状态（get_deploy_detail）
+
+调用 `@bot` MCP 的 `get_deploy_detail`：
+
+```json
+{ "related_id": 12345 }
 ```
 
-状态值：`Pending` → `Running` → `Completed` / `Failed`
+状态：`Pending` → `Running` → `Completed` / `Failed`
 
-### 3. 列出可部署服务
+### 3. 查看部署历史（get_deploy_history）
 
-```bash
-opencli yamibuy-idp services --env <环境> [--filter <关键词>]
+调用 `@bot` MCP 的 `get_deploy_history`：
+
+```json
+{ "limit": 10 }
 ```
 
-### 4. 部署历史
+### 4. 查询可部署服务（get_all_service）
 
-```bash
-opencli yamibuy-idp history [--limit <条数>]
+调用 `@bot` MCP 的 `get_all_service`：
+
+```json
+{ "environment": "gqc" }
 ```
 
-## SOP 集成：Phase 3.5 自动部署
+### 5. 查询分支列表（get_branch_or_tag）
 
-在 Phase 3.5 中，替代人工部署的流程：
+调用 `@bot` MCP 的 `get_branch_or_tag`：
 
-```bash
-# 1. 部署（支持多服务同时部署，逗号分隔）
-RESULT=$(opencli yamibuy-idp deploy --env qc --service ec-so-service,ec-so-job --branch feature/OP-34000 -f json)
-RELATED_ID=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['related_id'])")
-
-# 2. 轮询状态（每30秒查一次，最多等10分钟）
-for i in $(seq 1 20); do
-  STATUS=$(opencli yamibuy-idp status --related_id $RELATED_ID -f json | \
-    python3 -c "import sys,json; d=json.load(sys.stdin); print('Completed' if all(r['status']=='Completed' for r in d) else 'Failed' if any(r['status']=='Failed' for r in d) else 'Running')")
-  if [ "$STATUS" = "Completed" ]; then echo "部署成功"; break; fi
-  if [ "$STATUS" = "Failed" ]; then echo "部署失败"; break; fi
-  sleep 30
-done
-
-# 3. 部署成功后，调 QA Agent 跑集成测试
+```json
+{
+  "service_name": "ec-website-next",
+  "environment": "gqc"
+}
 ```
 
-## 注意事项
+## 前端项目也走 IDP
 
-- 每次命令执行约 8-10 秒（需要通过浏览器获取认证 token）
-- Token 依赖 Windows Chrome 的 Google 登录状态，如果 Chrome 未登录 IDP 会失败
-- prd 环境部署前必须经过用户确认，Agent 不得自动部署到生产
-
-## 前端项目部署
-
-**前端 ec-website-* 和 ec-mobilesite-* 项目同样走 IDP 部署**，不存在例外。
-
-| 服务名（IDP） | 对应仓库 |
-|-------------|---------|
-| `ec-website-next` | ec-website-next |
-| `ec-website-nb` | ec-website-nb |
-| `ec-website-trade-nb` | ec-website-trade-nb |
-| `ec-website-customer-next` | ec-website-customer-next |
-| `ec-website-customer-nb` | ec-website-customer-nb |
-| `ec-mobilesite-next` | ec-mobilesite-next |
-| `ec-mobilesite-nb` | ec-mobilesite-nb |
-| `ec-mobilesite-ssr` | ec-mobilesite-ssr |
+**ec-website-* 和 ec-mobilesite-* 前端项目同样通过 IDP 部署，不存在例外。**
 
 ⚠️ **严禁出现「前端不走 IDP 需人工部署」的判断**，这是错误的。
+
+## 部署通常需要 5-15 分钟
+
+部署发起后轮询 `get_deploy_detail` 确认状态，Completed 才算完成。
