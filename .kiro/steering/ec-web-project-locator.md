@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: 当需要开发、修改、查找前端 Web 或 H5 页面代码时必须读取。触发词：前端, H5, PC端, ec-website, ec-mobilesite, 登录页, 首页, 商品详情, 购物车, 结算, 订单, 个人中心, 页面, 组件, Next.js, Vue, Laravel, Nuxt, 哪个项目, 在哪个仓库, 前端仓库, 前端项目
 ---
 
 # Yamibuy 前端项目定位规则
