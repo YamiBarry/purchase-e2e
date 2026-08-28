@@ -147,3 +147,29 @@ Sheet 数据列：A=路由路径，B=页面描述，C=状态（已确认/已迁�
 
 **Vue**（ec-mobilesite-rma）
 - 页面：`src/views/`，路由：`src/router/`，状态：`src/store/`
+
+## ⚠️ 重要：需求涉及前端变更时，必须主动枚举所有受影响仓库
+
+**禁止只改需求方提到的仓库，必须自己判断哪些仓库需要改。**
+
+判断流程：
+1. 先按功能域（Step1 表格）确定受影响的页面类型
+2. 用 ec-website-customer-nb
+ec-website-customer-next
+ec-website-nb
+ec-website-next
+ec-website-trade-nb 列出所有前端仓库
+3. 逐一判断每个仓库是否覆盖该页面
+
+**这台机器上实际存在的前端仓库（必须逐一考虑）：**
+
+| 仓库 | 本地路径 | 是否存在 |
+|------|---------|---------|
+|  |  | ✅ |
+|  |  | ✅ |
+|  |  | ✅ |
+|  |  | ✅ |
+|  |  | ✅ |
+|  |  | ✅ |
+
+**示例**：登录需求涉及「所有站点的登录入口」→ 需检查 ec-website-next、ec-website-customer-next、ec-website-customer-nb、ec-website-nb、ec-website-trade-nb 共 5 个仓库，不能只改 ec-website-next。
