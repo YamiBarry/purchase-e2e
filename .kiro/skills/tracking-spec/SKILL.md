@@ -169,6 +169,7 @@ find ~/code/yami/{仓库名}/resources/assets/js -name "*track*" -o -name "enum.
 
 ## 禁止行为
 
+- ❌ **禁止修改已有 sheet 页** — 每个需求必须新增独立 sheet 页，绝对不能修改其他 OP 的 sheet 或「埋点定义模板」，即使是修正错误也不行
 - ❌ 不查 Sheet 就自己定义事件名
 - ❌ 绕过 `AnalyticsEventNameMap`，在业务组件里直接写字符串事件名
 - ❌ Sensor/Yamidata 用点号、Ymb 用下划线（格式搞反）
