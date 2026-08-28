@@ -58,3 +58,22 @@ ls ~/code/yami/ec-website-next/src/app/\[lang\]/canada-v2/_compotents/
 **参考实现优先级**：
 - 同一仓库已有实现 > 其他仓库已有实现 > 全新设计
 - 埋点必须复用 `analytics.track()` + `AnalyticsEventNameMap`，不自造事件名和格式
+
+## 埋点方案设计（需求含埋点时必须执行）
+
+**arch 阶段负责完整的埋点技术方案，完成后必须同步回需求产物目录。**
+
+### 执行步骤
+
+1. 读取 PM 产出的 `requirements/OP-XXXXX/tracking-spec.md`，了解业务层埋点需求（要哪些事件、参数）
+2. 按 `tracking-spec` skill 执行埋点设计（查 Sheet → 设计事件名 → 新增 sheet 页）
+3. **将完整技术埋点方案写回** `requirements/OP-XXXXX/tracking-spec.md`，覆盖 PM 的业务层版本
+
+写回后的 tracking-spec.md 必须包含：
+- 每个事件的 `AnalyticsEventNameMap` 常量名
+- Sensor/Yamidata 事件名（下划线）
+- Ymb 事件名（点号）
+- 触发时机和主要参数
+- 埋点 Sheet 的 tab 名称（供 QA 验证时查阅）
+
+**禁止**：只在架构文档里写埋点方案，不更新 requirements 目录（会导致 coder 和 QA 看不到完整定义）

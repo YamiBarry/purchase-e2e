@@ -61,6 +61,19 @@ inclusion: manual
 
 **其他交付物在 review PASS 后才生成**，确保它们基于终版 PRD 内容，不会出现 PRD 改了但其他交付物没同步的问题。
 
+### Tracking Spec 生成规则
+
+**PM Agent 只生成业务语义层，不写具体事件名和技术细节。**
+
+`tracking-spec.md` 内容规范：
+- ✅ 写：需要哪些类型的事件（曝光/点击/转化）、每个事件的触发时机、携带哪些业务参数
+- ✅ 写：是否复用现有事件（如有）
+- ❌ 不写：具体事件名（如 `ca_google_onetap_impression`）
+- ❌ 不写：Sensor/Yamidata/Ymb 的技术格式差异
+- ❌ 不写：`AnalyticsEventNameMap` 常量名
+
+**arch 阶段负责**：查埋点 Sheet、设计具体事件名、在 Sheet 新增页、将完整技术埋点方案更新到 `requirements/OP-XXXXX/tracking-spec.md`。
+
 ---
 
 ## PRD（给开发/测试/UI Agent）
