@@ -35,20 +35,26 @@
 **在做任何架构设计之前，必须先搜索是否已有同类功能的实现。**
 
 ```bash
-# 按功能关键词搜索
-grep -rn "{功能关键词}" ~/code/yami/ --include="*.ts" --include="*.tsx" --include="*.js" \
-  --include="*.java" -l 2>/dev/null | grep -v node_modules | grep -v dist | head -20
+# 按功能关键词搜索（替换 {关键词}）
+grep -rn "{关键词}" ~/code/yami/ --include="*.ts" --include="*.tsx" --include="*.js" \
+  -l 2>/dev/null | grep -v node_modules | grep -v dist | head -20
+
+# 登录/第三方登录类需求必搜
+find ~/code/yami/ec-website-next/src -name "*.tsx" | \
+  xargs grep -l "OneTap\|one.tap\|thirdLogin\|GoogleOneTap\|oauth\|socialLogin" 2>/dev/null
+
+# 特别注意：ec-website-next 的 canada-v2 目录有多个已落地功能的参考实现
+ls ~/code/yami/ec-website-next/src/app/\[lang\]/canada-v2/_compotents/
 ```
 
 找到参考实现后必须：
-1. 读懂参考实现的核心逻辑（组件挂载位置、判断条件、数据流）
-2. 明确新实现与参考实现的**相同点和差异点**
-3. 优先复用参考实现的模式，不重新发明
+1. **读完参考文件**，理解核心逻辑（组件挂载位置、判断条件、数据流、埋点方式）
+2. **明确复用 vs 扩展 vs 新写**：
+   - 能直接复用的模块 → 提取到通用位置，不重写
+   - 需要扩展的逻辑 → 在原有基础上加，不另起炉灶
+   - 真正没有的 → 才新写，且要参考已有模式（埋点、接口调用、错误处理）
+3. **架构文档必须说明**：参考了哪个文件、复用了什么、扩展了什么、为什么新写
 
 **参考实现优先级**：
 - 同一仓库已有实现 > 其他仓库已有实现 > 全新设计
-- 复用现有埋点方式（`analytics.track` + `AnalyticsEventNameMap`），不自造事件名格式
-
-**架构文档必须包含**：
-- 是否有参考实现（有则列出文件路径）
-- 与参考实现的关键差异及原因
+- 埋点必须复用 `analytics.track()` + `AnalyticsEventNameMap`，不自造事件名和格式
