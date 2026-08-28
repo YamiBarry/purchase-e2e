@@ -38,6 +38,24 @@
    - 例如：需求是「添加 XX 配置」→ 看 master 上现有类似配置是怎么管理的
    - ⚠️ **不要看 feat/feature 分支**，那些可能是错误的实现
 
+   **前端需求必须执行的搜索（不可省略）：**
+   ```bash
+   # 1. 确认涉及哪些前端仓库（先列出，再逐一判断）
+   ls ~/code/yami/ | grep -E "ec-website|ec-mobilesite"
+
+   # 2. 在现有代码里搜索类似功能（替换关键词）
+   grep -rn "{功能关键词}" ~/code/yami/ec-website-next/src \
+     --include="*.tsx" --include="*.ts" -l 2>/dev/null | grep -v node_modules
+
+   # 3. 特别关注：canada-v2 目录有多个已落地的 CA 站功能参考实现
+   ls ~/code/yami/ec-website-next/src/app/\[lang\]/canada-v2/_compotents/
+   ```
+
+   找到参考实现后必须读取文件，明确：
+   - 复用哪些模块（直接用，不重写）
+   - 扩展哪些逻辑（在原基础上加）
+   - 确实没有的才新写（且参考已有模式）
+
 2. **判断是否需要写代码**
    - 能通过配置解决的，不要写代码
    - 能通过运营操作解决的，不要写代码
