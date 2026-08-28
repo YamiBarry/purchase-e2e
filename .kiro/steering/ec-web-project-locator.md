@@ -65,7 +65,7 @@ inclusion: auto
 | 购物车、cart | ec-website-trade-nb | ec-mobilesite-nb |
 | 结算、checkout、支付 | ec-website-trade-nb | ec-mobilesite-nb |
 | 订单、order | ec-website-customer-next | ec-mobilesite-ssr |
-| 登录、注册 | ec-website-customer-next | ec-mobilesite-ssr |
+| 登录、注册 | ec-website-next、ec-website-customer-next、ec-website-nb、ec-website-customer-nb、ec-website-trade-nb（**全站登录入口，5个PC仓库都涉及**） | ec-mobilesite-ssr |
 | 个人中心、profile | ec-website-customer-next | ec-mobilesite-ssr |
 | 优惠券、coupon | ec-website-customer-next | ec-mobilesite-ssr |
 | 收藏、favorite | ec-website-customer-next | ec-mobilesite-ssr |
@@ -154,22 +154,18 @@ Sheet 数据列：A=路由路径，B=页面描述，C=状态（已确认/已迁�
 
 判断流程：
 1. 先按功能域（Step1 表格）确定受影响的页面类型
-2. 用 ec-website-customer-nb
-ec-website-customer-next
-ec-website-nb
-ec-website-next
-ec-website-trade-nb 列出所有前端仓库
+2. 用 `ls /home/e2e/code/yami/ | grep ec-website` 列出所有前端仓库
 3. 逐一判断每个仓库是否覆盖该页面
 
 **这台机器上实际存在的前端仓库（必须逐一考虑）：**
 
 | 仓库 | 本地路径 | 是否存在 |
 |------|---------|---------|
-|  |  | ✅ |
-|  |  | ✅ |
-|  |  | ✅ |
-|  |  | ✅ |
-|  |  | ✅ |
-|  |  | ✅ |
+| `ec-website-next` | `/home/e2e/code/yami/ec-website-next` | ✅ |
+| `ec-website-nb` | `/home/e2e/code/yami/ec-website-nb` | ✅ |
+| `ec-website-trade-nb` | `/home/e2e/code/yami/ec-website-trade-nb` | ✅ |
+| `ec-website-customer-next` | `/home/e2e/code/yami/ec-website-customer-next` | ✅ |
+| `ec-website-customer-nb` | `/home/e2e/code/yami/ec-website-customer-nb` | ✅ |
+| `ec-mobilesite-next` | `/home/e2e/code/yami/ec-mobilesite-next` | ✅ |
 
 **示例**：登录需求涉及「所有站点的登录入口」→ 需检查 ec-website-next、ec-website-customer-next、ec-website-customer-nb、ec-website-nb、ec-website-trade-nb 共 5 个仓库，不能只改 ec-website-next。
