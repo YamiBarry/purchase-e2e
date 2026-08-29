@@ -31,6 +31,32 @@ git diff --name-only origin/master HEAD    # 与 master 的文件差异
 
 不要用不带 range 的 `git log` 判断 —— 它会列出已合并到 master 的祖先 commit，会误判分支不干净。
 
+**⚠️ 基于 feat 分支建 OP 分支时的特殊处理（重要）**
+
+如果 OP 分支是基于 `feat/xxx` 建的（而不是 master），`git diff origin/master HEAD` 会包含 feat 分支的全部改动，其中可能混有其他需求的文件。
+
+**必须执行以下步骤确保分支干净：**
+
+```bash
+# 1. 从 master 重建干净的 OP 分支
+git checkout origin/master -b OP-XXXXX-clean
+
+# 2. 只 cherry-pick 本需求相关的文件（不是整个 commit）
+git checkout feat/xxx -- src/features/本需求目录/
+git checkout feat/xxx -- 本需求涉及的其他文件
+
+# 3. 提交干净的改动
+git add .
+git commit -m "feat(OP-XXXXX): 本需求描述"
+
+# 4. 替换原来的 OP 分支
+git branch -D OP-XXXXX
+git branch -m OP-XXXXX
+git push origin OP-XXXXX --force
+```
+
+**判断文件是否属于本任务**：看文件路径是否与本需求功能模块相关，如果是 cms/search/other-feature 等明显无关的目录，直接排除。
+
 **PR** — body 末尾必须有 `ai_coverage=X.X`。不要 push 到 master，不要 force push。
 
 ## 编译验证降级规则（worktree 环境）
