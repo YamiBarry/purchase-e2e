@@ -21,6 +21,42 @@
 `outputs/phase-arch.md`：架构规范全文，需包含修改范围、复用的公共工具、类设计、DB 变更、配置变更、编码约束。
 
 ## 硬要求
+## 前端项目识别（涉及前端需求时强制执行）
+
+**Arch 阶段是 services 列表的最终决策者。** `params.repos` 和 PM 阶段的 services 仅作参考，Arch 必须自主验证。
+
+### 强制执行步骤
+
+1. **读取项目路由规则**：
+   ```bash
+   cat ~/.kiro/steering/ec-web-project-locator.md
+   ```
+
+2. **按功能域查表**，确定应涉及哪些仓库（不能只看 params.repos）
+
+3. **逐仓库验证**，确认本地存在：
+   ```bash
+   ls /home/e2e/code/yami/ | grep ec-website
+   ```
+
+4. **输出完整 services 列表**，覆盖上游的不完整列表
+
+### 功能域 → 仓库映射（常用）
+
+| 功能域 | 必须包含的仓库 |
+|--------|---------------|
+| 登录/注册/联合登录 | ec-website-next, ec-website-nb, ec-website-customer-next, ec-website-customer-nb, ec-website-trade-nb（共 5 个） |
+| 购物车/结算/支付 | ec-website-trade-nb |
+| 订单/个人中心 | ec-website-customer-next, ec-website-customer-nb |
+| 商品详情/首页/搜索 | ec-website-next |
+| 分类/品牌/闪购 | ec-website-nb |
+
+### ⛔ 禁止行为
+
+- ❌ 直接沿用 `params.repos` 不做验证
+- ❌ 只改需求方提到的仓库，不自主判断
+- ❌ 登录类需求只涉及 3 个仓库（必须 5 个）
+
 
 - `db_changes` 里的 DDL/DML，字段类型和 NOT NULL 约束必须用 `SHOW FULL COLUMNS` 核对过
 - DML 的 `WHERE` 要能精确定位（生产库同一业务 key 可能按 `site_code` 等维度多行）
