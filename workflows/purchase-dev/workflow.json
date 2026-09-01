@@ -61,15 +61,38 @@
       "ref": "phase-pm.md",
       "nodeType": "agent_compute",
       "agent": "purchase-pm-agent",
-      "requiredArtifacts": ["phase-pm.json", "phase-pm.md"],
+      "requiredArtifacts": [
+        "phase-pm.json",
+        "phase-pm.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["task_type", "need_design", "need_code", "summary", "prd_path"],
+        "requiredFields": [
+          "task_type",
+          "need_design",
+          "need_code",
+          "summary",
+          "prd_path",
+          "need_tracking"
+        ],
         "fieldTypes": {
           "task_type": "string",
           "need_design": "string",
           "need_code": "string",
           "summary": "string",
-          "prd_path": "string"
+          "prd_path": "string",
+          "need_tracking": "string",
+          "tracking_events_count": "number",
+          "tracking_spec_path": "string"
+        },
+        "conditionalRequired": {
+          "when": "need_tracking == 'yes'",
+          "fields": [
+            "tracking_events_count",
+            "tracking_spec_path"
+          ]
+        },
+        "fieldValidations": {
+          "tracking_spec_path": "file_exists"
         }
       }
     },
@@ -80,11 +103,24 @@
       "ref": "phase-pm-review.md",
       "nodeType": "agent_decision",
       "agent": "purchase-pm-review-agent",
-      "dependsOn": ["pm"],
-      "requiredArtifacts": ["phase-pm_review.json", "phase-pm_review.md"],
+      "dependsOn": [
+        "pm"
+      ],
+      "requiredArtifacts": [
+        "phase-pm_review.json",
+        "phase-pm_review.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["conclusion", "loop_count", "issues"],
-        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+        "requiredFields": [
+          "conclusion",
+          "loop_count",
+          "issues"
+        ],
+        "fieldTypes": {
+          "conclusion": "string",
+          "loop_count": "number",
+          "issues": "array"
+        }
       }
     },
     {
@@ -94,12 +130,25 @@
       "ref": "phase-design.md",
       "nodeType": "agent_output",
       "agent": "purchase-design-agent",
-      "dependsOn": ["pm"],
+      "dependsOn": [
+        "pm"
+      ],
       "skipIf": "{{phase-pm.need_design}} == \"no\"",
-      "requiredArtifacts": ["phase-design.json", "phase-design.md"],
+      "requiredArtifacts": [
+        "phase-design.json",
+        "phase-design.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["html_paths", "drive_url", "summary"],
-        "fieldTypes": { "html_paths": "array", "drive_url": "string", "summary": "string" }
+        "requiredFields": [
+          "html_paths",
+          "drive_url",
+          "summary"
+        ],
+        "fieldTypes": {
+          "html_paths": "array",
+          "drive_url": "string",
+          "summary": "string"
+        }
       }
     },
     {
@@ -109,12 +158,26 @@
       "ref": "phase-design-review.md",
       "nodeType": "agent_decision",
       "agent": "purchase-design-review-agent",
-      "dependsOn": ["pm", "design"],
+      "dependsOn": [
+        "pm",
+        "design"
+      ],
       "skipIf": "{{phase-pm.need_design}} == \"no\"",
-      "requiredArtifacts": ["phase-design_review.json", "phase-design_review.md"],
+      "requiredArtifacts": [
+        "phase-design_review.json",
+        "phase-design_review.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["conclusion", "loop_count", "issues"],
-        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+        "requiredFields": [
+          "conclusion",
+          "loop_count",
+          "issues"
+        ],
+        "fieldTypes": {
+          "conclusion": "string",
+          "loop_count": "number",
+          "issues": "array"
+        }
       }
     },
     {
@@ -124,12 +187,25 @@
       "ref": "phase-api.md",
       "nodeType": "agent_compute",
       "agent": "api-designer-agent",
-      "dependsOn": ["pm"],
+      "dependsOn": [
+        "pm"
+      ],
       "skipIf": "{{phase-pm.need_code}} == \"no\"",
-      "requiredArtifacts": ["phase-api.json", "phase-api.md"],
+      "requiredArtifacts": [
+        "phase-api.json",
+        "phase-api.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["contract_path", "endpoints", "services"],
-        "fieldTypes": { "contract_path": "string", "endpoints": "array", "services": "array" }
+        "requiredFields": [
+          "contract_path",
+          "endpoints",
+          "services"
+        ],
+        "fieldTypes": {
+          "contract_path": "string",
+          "endpoints": "array",
+          "services": "array"
+        }
       }
     },
     {
@@ -139,12 +215,46 @@
       "ref": "phase-arch.md",
       "nodeType": "agent_compute",
       "agent": "architect-agent",
-      "dependsOn": ["pm", "api"],
+      "dependsOn": [
+        "pm",
+        "api"
+      ],
       "skipIf": "{{phase-pm.need_code}} == \"no\"",
-      "requiredArtifacts": ["phase-arch.json", "phase-arch.md"],
+      "requiredArtifacts": [
+        "phase-arch.json",
+        "phase-arch.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["arch_path", "services", "db_changes", "config_changes"],
-        "fieldTypes": { "arch_path": "string", "services": "array", "db_changes": "array", "config_changes": "array" }
+        "requiredFields": [
+          "arch_path",
+          "services",
+          "db_changes",
+          "config_changes"
+        ],
+        "fieldTypes": {
+          "arch_path": "string",
+          "services": "array",
+          "db_changes": "array",
+          "config_changes": "array",
+          "tracking_spec_path": "string",
+          "tracking_sheet_url": "string",
+          "tracking_sheet_tab": "string",
+          "tracking_events": "array"
+        },
+        "conditionalRequired": {
+          "when": "{{phase-pm.need_tracking}} == 'yes'",
+          "fields": [
+            "tracking_spec_path",
+            "tracking_sheet_url",
+            "tracking_sheet_tab",
+            "tracking_events"
+          ]
+        },
+        "fieldValidations": {
+          "tracking_spec_path": "file_exists",
+          "tracking_sheet_url": "sheet_url_with_gid",
+          "tracking_events": "array_items_have:name,sensor_name,trigger"
+        }
       }
     },
     {
@@ -154,12 +264,27 @@
       "ref": "phase-arch-review.md",
       "nodeType": "agent_decision",
       "agent": "reviewer-agent",
-      "dependsOn": ["pm", "api", "arch"],
+      "dependsOn": [
+        "pm",
+        "api",
+        "arch"
+      ],
       "skipIf": "{{phase-pm.need_code}} == \"no\"",
-      "requiredArtifacts": ["phase-arch_review.json", "phase-arch_review.md"],
+      "requiredArtifacts": [
+        "phase-arch_review.json",
+        "phase-arch_review.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["conclusion", "loop_count", "issues"],
-        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+        "requiredFields": [
+          "conclusion",
+          "loop_count",
+          "issues"
+        ],
+        "fieldTypes": {
+          "conclusion": "string",
+          "loop_count": "number",
+          "issues": "array"
+        }
       }
     },
     {
@@ -169,17 +294,32 @@
       "ref": "phase-code.md",
       "nodeType": "agent_compute",
       "agent": "coder-agent",
-      "dependsOn": ["api", "arch"],
+      "dependsOn": [
+        "api",
+        "arch",
+        "code_review"
+      ],
       "skipIf": "{{phase-pm.need_code}} == \"no\"",
-      "requiredArtifacts": ["phase-code.json", "phase-code.md"],
+      "requiredArtifacts": [
+        "phase-code.json",
+        "phase-code.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["branches", "changed_files", "build_status", "pushed", "pr_urls"],
+        "requiredFields": [
+          "branches",
+          "changed_files",
+          "build_status",
+          "pushed",
+          "pr_urls"
+        ],
         "fieldTypes": {
           "branches": "array",
           "changed_files": "array",
           "build_status": "string",
           "pushed": "string",
-          "pr_urls": "array"
+          "pr_urls": "array",
+          "loop_back_from": "string",
+          "issues_fixed": "array"
         }
       }
     },
@@ -190,12 +330,28 @@
       "ref": "phase-ut.md",
       "nodeType": "agent_compute",
       "agent": "ut-generator",
-      "dependsOn": ["arch", "code"],
+      "dependsOn": [
+        "arch",
+        "code"
+      ],
       "skipIf": "{{phase-pm.need_code}} == \"no\"",
-      "requiredArtifacts": ["phase-ut.json", "phase-ut.md"],
+      "requiredArtifacts": [
+        "phase-ut.json",
+        "phase-ut.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["test_files", "test_status", "case_count", "coverage_note"],
-        "fieldTypes": { "test_files": "array", "test_status": "string", "case_count": "number", "coverage_note": "string" }
+        "requiredFields": [
+          "test_files",
+          "test_status",
+          "case_count",
+          "coverage_note"
+        ],
+        "fieldTypes": {
+          "test_files": "array",
+          "test_status": "string",
+          "case_count": "number",
+          "coverage_note": "string"
+        }
       }
     },
     {
@@ -205,12 +361,27 @@
       "ref": "phase-code-review.md",
       "nodeType": "agent_decision",
       "agent": "reviewer-agent",
-      "dependsOn": ["arch", "code", "ut"],
+      "dependsOn": [
+        "arch",
+        "code",
+        "ut"
+      ],
       "skipIf": "{{phase-pm.need_code}} == \"no\"",
-      "requiredArtifacts": ["phase-code_review.json", "phase-code_review.md"],
+      "requiredArtifacts": [
+        "phase-code_review.json",
+        "phase-code_review.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["conclusion", "loop_count", "issues"],
-        "fieldTypes": { "conclusion": "string", "loop_count": "number", "issues": "array" }
+        "requiredFields": [
+          "conclusion",
+          "loop_count",
+          "issues"
+        ],
+        "fieldTypes": {
+          "conclusion": "string",
+          "loop_count": "number",
+          "issues": "array"
+        }
       }
     },
     {
@@ -220,12 +391,31 @@
       "ref": "phase-qa.md",
       "nodeType": "agent_decision",
       "agent": "purchase-qa-agent",
-      "dependsOn": ["pm", "api", "code"],
+      "dependsOn": [
+        "pm",
+        "api",
+        "code"
+      ],
       "skipIf": "{{phase-pm.need_code}} == \"no\"",
-      "requiredArtifacts": ["phase-qa.json", "phase-qa.md"],
+      "requiredArtifacts": [
+        "phase-qa.json",
+        "phase-qa.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["conclusion", "loop_count", "env", "cases", "failures"],
-        "fieldTypes": { "conclusion": "string", "loop_count": "number", "env": "string", "cases": "array", "failures": "array" }
+        "requiredFields": [
+          "conclusion",
+          "loop_count",
+          "env",
+          "cases",
+          "failures"
+        ],
+        "fieldTypes": {
+          "conclusion": "string",
+          "loop_count": "number",
+          "env": "string",
+          "cases": "array",
+          "failures": "array"
+        }
       }
     },
     {
@@ -235,38 +425,133 @@
       "ref": "phase-doc.md",
       "nodeType": "agent_output",
       "agent": "doc-engineer-agent",
-      "dependsOn": ["pm", "api", "arch", "code"],
-      "requiredArtifacts": ["phase-doc.json", "phase-doc.md"],
+      "dependsOn": [
+        "pm",
+        "api",
+        "arch",
+        "code"
+      ],
+      "requiredArtifacts": [
+        "phase-doc.json",
+        "phase-doc.md"
+      ],
       "outputSchema": {
-        "requiredFields": ["api_doc_path", "test_doc_path", "deliverables"],
-        "fieldTypes": { "api_doc_path": "string", "test_doc_path": "string", "deliverables": "array" }
+        "requiredFields": [
+          "api_doc_path",
+          "test_doc_path",
+          "deliverables"
+        ],
+        "fieldTypes": {
+          "api_doc_path": "string",
+          "test_doc_path": "string",
+          "deliverables": "array"
+        }
       }
     }
   ],
   "flow": {
     "entry": "pm",
     "edges": [
-      { "source": "pm", "target": "pm_review", "label": "送审" },
-      { "source": "pm_review", "target": "pm", "label": "打回补充", "condition": { "field": "conclusion", "equals": "fail" } },
-      { "source": "pm_review", "target": "design", "label": "通过" },
-
-      { "source": "design", "target": "design_review", "label": "送审" },
-      { "source": "design_review", "target": "design", "label": "打回重做", "condition": { "field": "conclusion", "equals": "fail" } },
-      { "source": "design_review", "target": "api", "label": "通过" },
-
-      { "source": "api", "target": "arch", "label": "契约就绪" },
-
-      { "source": "arch", "target": "arch_review", "label": "送审" },
-      { "source": "arch_review", "target": "arch", "label": "打回重做", "condition": { "field": "conclusion", "equals": "fail" } },
-      { "source": "arch_review", "target": "code", "label": "通过" },
-
-      { "source": "code", "target": "ut", "label": "补测试" },
-      { "source": "ut", "target": "code_review", "label": "送审" },
-      { "source": "code_review", "target": "code", "label": "打回修复", "condition": { "field": "conclusion", "equals": "fail" } },
-      { "source": "code_review", "target": "qa", "label": "通过" },
-
-      { "source": "qa", "target": "code", "label": "测试失败回修", "condition": { "field": "conclusion", "equals": "fail" } },
-      { "source": "qa", "target": "doc", "label": "通过" }
+      {
+        "source": "pm",
+        "target": "pm_review",
+        "label": "送审"
+      },
+      {
+        "source": "pm_review",
+        "target": "pm",
+        "label": "打回补充",
+        "condition": {
+          "field": "conclusion",
+          "equals": "fail"
+        }
+      },
+      {
+        "source": "pm_review",
+        "target": "design",
+        "label": "通过"
+      },
+      {
+        "source": "design",
+        "target": "design_review",
+        "label": "送审"
+      },
+      {
+        "source": "design_review",
+        "target": "design",
+        "label": "打回重做",
+        "condition": {
+          "field": "conclusion",
+          "equals": "fail"
+        }
+      },
+      {
+        "source": "design_review",
+        "target": "api",
+        "label": "通过"
+      },
+      {
+        "source": "api",
+        "target": "arch",
+        "label": "契约就绪"
+      },
+      {
+        "source": "arch",
+        "target": "arch_review",
+        "label": "送审"
+      },
+      {
+        "source": "arch_review",
+        "target": "arch",
+        "label": "打回重做",
+        "condition": {
+          "field": "conclusion",
+          "equals": "fail"
+        }
+      },
+      {
+        "source": "arch_review",
+        "target": "code",
+        "label": "通过"
+      },
+      {
+        "source": "code",
+        "target": "ut",
+        "label": "补测试"
+      },
+      {
+        "source": "ut",
+        "target": "code_review",
+        "label": "送审"
+      },
+      {
+        "source": "code_review",
+        "target": "code",
+        "label": "打回修复",
+        "condition": {
+          "field": "conclusion",
+          "equals": "fail"
+        }
+      },
+      {
+        "source": "code_review",
+        "target": "qa",
+        "label": "通过"
+      },
+      {
+        "source": "qa",
+        "target": "code",
+        "label": "测试失败回修",
+        "condition": {
+          "field": "conclusion",
+          "equals": "fail"
+        }
+      },
+      {
+        "source": "qa",
+        "target": "doc",
+        "label": "通过"
+      }
     ]
   }
 }

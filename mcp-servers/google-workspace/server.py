@@ -527,19 +527,27 @@ def get_sheet_info(spreadsheet_id: str) -> dict:
 
 
 @mcp.tool()
-def add_sheet_tab(spreadsheet_id: str, title: str) -> str:
+def add_sheet_tab(spreadsheet_id: str, title: str) -> dict:
     """Add a new tab/sheet to a spreadsheet.
 
     Args:
         spreadsheet_id: The spreadsheet ID
         title: New tab name
+
+    Returns:
+        dict with sheetId, title, and url (including #gid=)
     """
     sheets = get_sheets_service()
-    sheets.spreadsheets().batchUpdate(
+    response = sheets.spreadsheets().batchUpdate(
         spreadsheetId=spreadsheet_id,
         body={"requests": [{"addSheet": {"properties": {"title": title}}}]},
     ).execute()
-    return f"Added tab '{title}'."
+    
+    # Extract sheetId from response
+    sheet_id = response["replies"][0]["addSheet"]["properties"]["sheetId"]
+    url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_id}"
+    
+    return {"sheetId": sheet_id, "title": title, "url": url}
 
 
 # ─── Entry Point ─────────────────────────────────────────────────────────────
